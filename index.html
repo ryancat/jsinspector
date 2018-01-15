@@ -53,6 +53,20 @@
       color: red;
       border: 1px solid red;
     }
+
+    .ace_gutter-cell {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .ace_gutter-cell.ace_breakpoint::before {
+      position: absolute;
+      left: -4px;
+      top: -4px;
+      content: ' \25CF';
+      font-size: 16px;
+      color: #d80000;
+    }
   </style>
   </head>
 
@@ -69,10 +83,29 @@
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
   <script type="text/javascript">
+    // Global states
+
     // Config ace editor
     var editor = ace.edit('editor');
     editor.session.setMode("ace/mode/javascript");
     editor.setTheme("ace/theme/tomorrow");
+
+    function toggleBreakPoint (row, className) {
+      var breakPoints = editor.session.getBreakpoints();
+      if (breakPoints[row]) {
+        editor.session.clearBreakpoint(row);
+        return false;
+      } 
+      else {
+        editor.session.setBreakpoint(row, className);
+        return true;
+      }
+    }
+
+    // Add event listener for editor
+    editor.on('gutterclick', function (e) {
+      toggleBreakPoint(e.getDocumentPosition().row);
+    });
 
     // Retrieve information from localStorage, if any
     var content = localStorage.getItem('jsinspectorContent');
@@ -80,11 +113,11 @@
       editor.setValue(content);
     }
 
-    var result = document.getElementById('evalResult');
+    var resultElement = document.getElementById('evalResult');
 
     // Store changes into localStorage
     editor.session.on('change', function () {
-      result.innerHTML = '';
+      resultElement.innerHTML = '';
       localStorage.setItem('jsinspectorContent', editor.getValue());
     });
 
@@ -92,24 +125,28 @@
     // This will trigger browser inspector.
     var inspectBtn = document.getElementById('inspectBtn');
     inspectBtn.addEventListener('click', function () {
-      var content = editor.getValue(),
-          resultValue;
+      var lineContents = editor.getValue().split('\n'),
+          evalContent,
+          result;
       // TODO: Avoid nested eval
       // TODO: Undo and Redo
 
-      // Add breakpoint
-      content = '// Start debug your javascript...\ndebugger;\n\n' + content;
+      // Add breakpoints
+      editor.session.getBreakpoints().forEach(function (breakPointClass, row) {
+        lineContents[row] = 'debugger; /* Line ' + (row + 1) + ' */' + lineContents[row];
+      });
+
+      evalContent = '// Start debug your javascript...\ndebugger;\n\n' + lineContents.join('\n');
 
       // It's ok to use eval as this will be a static page
       try {
-        resultValue = eval(content);
+        result = eval(evalContent);
       } catch (e) {
-        console.log('Your javascript code has error(s)');
-        result.innerHTML = '<span class="result error">Your javascript code has error(s)</span>';
+        resultElement.innerHTML = '<span class="result error">Your javascript code has error(s)</span>';
       }
 
-      if (result.innerHTML === '') {
-        result.innerHTML = '<span class="result">Result: ' + resultValue + '</span>';
+      if (resultElement.innerHTML === '') {
+        resultElement.innerHTML = '<span class="result">Result: ' + result + '</span>';
       }
     });
   </script>
