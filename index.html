@@ -78,6 +78,10 @@
       margin-bottom: 10px;
     }
 
+    .toobarItem {
+      width: 100%;
+    }
+
     .toolbarBreakpointBtn {
       position: relative;
       height: 20px;
@@ -107,7 +111,29 @@
 
     .toolbarBreakpointLines {
       margin: 0;
+      padding: 0;
+      list-style: none;
       margin-bottom: 10px;
+    }
+
+    .toolbarBreakpointLines li {
+      display: flex;
+      border: 1px solid #d80000;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+
+    .breakpointLineNumber {
+      padding: 10px;
+      background-color: #f6f6f6;
+    }
+
+    .breakpointLineContent {
+      padding: 10px;
+    }
+
+    .breakpointLineContent pre {
+      margin: 0;
     }
   </style>
   </head>
@@ -173,18 +199,25 @@
 
     var toolbarBreakpointLines = document.querySelector('.toolbarBreakpointLines');
 
+    toolbarBreakpointLines.addEventListener('click', function (e) {
+      console.log(e);
+      // var breakpointLineElement = e.target.closest
+    });
+
     function addToBreakpointLines (row) {
       var lineContent = editor.session.getLine(row),
           breakpointLineElement = document.createElement('li');
 
-      breakpointLineElement.innerHTML = '<span>' + (row + 1) + '</span><span>' + lineContent + '</span>';
       breakpointLineElement.classList.add('breakpointLine-' + row);
+      breakpointLineElement.innerHTML = 
+        '<div class="breakpointLineNumber">' + (row + 1) + '</div>'
+        + '<div class="breakpointLineContent"><pre>' + lineContent + '</pre><div>';
       toolbarBreakpointLines.appendChild(breakpointLineElement);
     }
 
     function removeFromBreakpointLines (row) {
-      var lineToRemove = toolbarBreakpointLines.querySelector('.breakpointLine-' + row);
-      toolbarBreakpointLines.removeChild(lineToRemove);
+      var lineElementToRemove = toolbarBreakpointLines.querySelector('.breakpointLine-' + row);
+      toolbarBreakpointLines.removeChild(lineElementToRemove);
     }
 
     // Config ace editor
