@@ -65,10 +65,15 @@
     // This will trigger browser inspector.
     var inspectBtn = document.getElementById('inspectBtn');
     inspectBtn.addEventListener('click', function () {
+      var content = editor.getValue();
+      // TODO: Avoid nested eval
+      // TODO: Undo and Redo
+      
+      // It's ok to use eval as this will be a static page
       eval(
         '// Start debug your javascript...\n'
         + 'debugger;\n\n' 
-        + editor.getValue());
+        + content);
     });
   </script>
 </html>
