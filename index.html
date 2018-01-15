@@ -61,11 +61,53 @@
     
     .ace_gutter-cell.ace_breakpoint::before {
       position: absolute;
-      left: -4px;
-      top: -4px;
+      left: -9px;
       content: ' \25CF';
-      font-size: 16px;
+      line-height: 15px;
+      font-size: 21px;
       color: #d80000;
+      font-family: monospace;
+    }
+
+    .ace_gutter-cell.ace_breakpoint.disabled::before {
+      color: #880000;
+    }
+
+    .toolbar {
+      display: flex;
+      margin-bottom: 10px;
+    }
+
+    .toolbarBreakpointBtn {
+      position: relative;
+      height: 20px;
+      line-height: 15px;
+      font-family: monospace;
+      font-size: 12px;
+      padding-left: 17px;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+
+    .toolbarBreakpointBtn::before {
+      position: absolute;
+      left: 2px;
+      content: ' \25CF';
+      font-size: 21px;
+      color: #d80000;
+    }
+
+    .toolbarBreakpointBtn.toDisable::before {
+      color: #880000;
+    }
+
+    .toolbarBreakpointBtn.toEnable {
+      display: none;
+    }
+
+    .toolbarBreakpointLines {
+      margin: 0;
+      margin-bottom: 10px;
     }
   </style>
   </head>
@@ -73,6 +115,13 @@
   <body>
     <div id="jsinspectorApp">
       <div id="editor"></div>
+      <div class="toolbar">
+        <div class="toobarItem toolbarBreakpoint">
+          <ul class="toolbarBreakpointLines"></ul>
+          <button class="toolbarBreakpointBtn toDisable">Disable Breakpoints</button>
+          <button class="toolbarBreakpointBtn toEnable">Enable Breakpoints</button>
+        </div>
+      </div>
       <div class="description">
         <span>Please open your browser's dev tools, as well as active breakpoints</span>
       </div>
@@ -84,14 +133,70 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
   <script type="text/javascript">
     // Global states
+    var jsinspectorState = {
+      breakPointsDisabled: false
+    };
+
+    // Toolbar
+    var disableBreakpointElement = document.querySelector('.toolbarBreakpointBtn.toDisable');
+    disableBreakpointElement.addEventListener('click', function () {
+      var breakPoints = editor.session.getBreakpoints();
+      breakPoints.forEach(function (breakPointClass, row) {
+        editor.session.setBreakpoint(row, 'ace_breakpoint disabled');
+      });
+
+      jsinspectorState.breakPointsDisabled = true;
+      toggleBreakpointBtn();
+    });
+
+    var enableBreakpointElement = document.querySelector('.toolbarBreakpointBtn.toEnable');
+    enableBreakpointElement.addEventListener('click', function () {
+      var breakPoints = editor.session.getBreakpoints();
+      breakPoints.forEach(function (breakPointClass, row) {
+        editor.session.setBreakpoint(row, 'ace_breakpoint');
+      });
+
+      jsinspectorState.breakPointsDisabled = false;
+      toggleBreakpointBtn();
+    });
+
+    function toggleBreakpointBtn () {
+      if (jsinspectorState.breakPointsDisabled) {
+        disableBreakpointElement.style.display = 'none';
+        enableBreakpointElement.style.display = 'block';
+      }
+      else {
+        disableBreakpointElement.style.display = 'block';
+        enableBreakpointElement.style.display = 'none';
+      }
+    }
+
+    var toolbarBreakpointLines = document.querySelector('.toolbarBreakpointLines');
+
+    function addToBreakpointLines (row) {
+      var lineContent = editor.session.getLine(row),
+          breakpointLineElement = document.createElement('li');
+
+      breakpointLineElement.innerHTML = '<span>' + (row + 1) + '</span><span>' + lineContent + '</span>';
+      breakpointLineElement.classList.add('breakpointLine-' + row);
+      toolbarBreakpointLines.appendChild(breakpointLineElement);
+    }
+
+    function removeFromBreakpointLines (row) {
+      var lineToRemove = toolbarBreakpointLines.querySelector('.breakpointLine-' + row);
+      toolbarBreakpointLines.removeChild(lineToRemove);
+    }
 
     // Config ace editor
     var editor = ace.edit('editor');
     editor.session.setMode("ace/mode/javascript");
     editor.setTheme("ace/theme/tomorrow");
 
-    function toggleBreakPoint (row, className) {
-      var breakPoints = editor.session.getBreakpoints();
+    function toggleBreakPoint (row) {
+      var breakPoints = editor.session.getBreakpoints(),
+          className = jsinspectorState.breakPointsDisabled 
+            ? 'ace_breakpoint disabled' : 'ace_breakpoint';
+
       if (breakPoints[row]) {
         editor.session.clearBreakpoint(row);
         return false;
@@ -104,7 +209,10 @@
 
     // Add event listener for editor
     editor.on('gutterclick', function (e) {
-      toggleBreakPoint(e.getDocumentPosition().row);
+      var row = e.getDocumentPosition().row;
+
+      toggleBreakPoint(row) 
+        ? addToBreakpointLines(row) : removeFromBreakpointLines(row);
     });
 
     // Retrieve information from localStorage, if any
@@ -133,7 +241,9 @@
 
       // Add breakpoints
       editor.session.getBreakpoints().forEach(function (breakPointClass, row) {
-        lineContents[row] = 'debugger; /* Line ' + (row + 1) + ' */' + lineContents[row];
+        if (breakPointClass.indexOf('disabled') === -1) {
+          lineContents[row] = 'debugger; /* Line ' + (row + 1) + ' */' + lineContents[row];
+        }
       });
 
       evalContent = '// Start debug your javascript...\ndebugger;\n\n' + lineContents.join('\n');
