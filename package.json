@@ -1,0 +1,40 @@
+{
+  "name": "jsinspector",
+  "version": "0.0.1",
+  "description": "Javascript inspector",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "npm test",
+    "open": "open index.html",
+    "build": "webpack",
+    "watch": "npm run build -- --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryancat/jsinspector.git"
+  },
+  "keywords": [
+    "javascript",
+    "inspector"
+  ],
+  "author": "Ryan Chen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ryancat/jsinspector/issues"
+  },
+  "homepage": "https://github.com/ryancat/jsinspector#readme",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.37",
+    "@babel/preset-env": "^7.0.0-beta.37",
+    "babel-loader": "^8.0.0-beta.0",
+    "css-loader": "^0.28.8",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "install": "^0.10.2",
+    "node-sass": "^4.7.2",
+    "npm": "^5.6.0",
+    "open": "0.0.5",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.19.1",
+    "webpack": "^3.10.0"
+  }
+}
