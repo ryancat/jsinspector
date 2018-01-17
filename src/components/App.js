@@ -28,7 +28,6 @@ class App extends Base {
     this.inspectBtn.addEventListener('click', () => {
       let editor = this.editor.aceEditor,
           lineContents = editor.getValue().split('\n'),
-          result = '',
           evalContent
 
       // TODO: Avoid nested eval
@@ -54,17 +53,13 @@ class App extends Base {
 
       // It's ok to use eval as this will be a static page
       try {
-        eval(evalContent)
+        this.console.addLog('>>> ' + eval(evalContent))
       } catch (e) {
-        this.console.resultElement.innerHTML = '<pre class="result error">Your javascript code has error(s)</pre>'
+        this.console.addError('>>> Your javascript code has error(s)')
       }
 
       // Restore console.log
       console.log = oldConsoleLog
-
-      // if (this.console.resultElement.innerHTML === '') {
-      //   this.console.resultElement.innerHTML = '<pre class="result">' + result + '</pre>'
-      // }
     })
   }
 };

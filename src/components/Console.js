@@ -10,6 +10,10 @@ class Console extends Base {
     this.resultElement.innerHTML += '<pre class="result">' + log + '</pre>'
   }
 
+  addError (error) {
+    this.resultElement.innerHTML += '<pre class="result error">' + error + '</pre>'
+  }
+
   clearLog () {
     this.resultElement.innerHTML = ''
   }
@@ -29,7 +33,7 @@ class Console extends Base {
       this.resultElement.querySelectorAll('hr').forEach((node) => {
         node.classList.add('old')
       })
-      
+
       this.resultElement.innerHTML += '<hr />'
     }
   }
