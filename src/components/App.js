@@ -2,6 +2,9 @@ import Base from './Base'
 import Editor from './Editor'
 import Console from './Console'
 
+// Performance test duration is about 3s
+const PERF_DURATION = 3000
+
 class App extends Base {
   constructor () {
     super()
@@ -16,6 +19,7 @@ class App extends Base {
     })
 
     this.inspectBtn = document.getElementById('inspectBtn')
+    this.perfBtn = document.getElementById('perfBtn')
 
     // Config inspect behavior. 
     // This will trigger browser inspector.
@@ -60,6 +64,45 @@ class App extends Base {
 
       // Restore console.log
       console.log = oldConsoleLog
+    })
+
+    this.perfBtn.addEventListener('click', () => {
+      let editor = this.editor.aceEditor,
+          content = editor.getValue(),
+          hasError = false,
+          totalDuration = 0,
+          singleDuration,
+          runCount,
+          runCountIter
+          
+
+      this.console.startNewLog()
+
+      // Perf test will evalute run time by average
+      try {
+        singleDuration = window.performance.now()
+        eval(content)
+        singleDuration = window.performance.now() - singleDuration
+      } catch (e) {
+        this.console.addError('>>> ' + e.message)
+        hasError = true
+      }
+
+      if (hasError) {
+        return
+      }
+
+      runCount = Math.floor(PERF_DURATION / singleDuration)
+      runCountIter = runCount
+
+      while (runCountIter--) {
+        singleDuration = window.performance.now()
+        eval(content)
+        singleDuration = window.performance.now() - singleDuration
+        totalDuration += singleDuration
+      }
+
+      this.console.addLog('[Average duration for ' + runCount + ' runs] ' + totalDuration / runCount * 1000 + ' ms')
     })
   }
 };
