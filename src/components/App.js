@@ -55,7 +55,7 @@ class App extends Base {
       try {
         this.console.addLog('>>> ' + eval(evalContent))
       } catch (e) {
-        this.console.addError('>>> Your javascript code has error(s)')
+        this.console.addError('>>> ' + e.message)
       }
 
       // Restore console.log
