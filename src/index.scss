@@ -11,7 +11,7 @@ $gutter: #f6f6f6;
   width: 100%;
   min-width: 300px;
   height: 500px;
-  max-height: 800px;
+  max-height: 1000px;
   border: 1px solid $border;
   outline: none;
   margin-bottom: 20px;
@@ -38,17 +38,6 @@ $gutter: #f6f6f6;
   margin-bottom: 10px;
   font-family: monospace;
   font-size: 12px;
-}
-
-.result {
-  color: green;
-  border: 1px solid green;
-  padding: 5px;
-
-  &.error {
-    color: red;
-    border: 1px solid red;
-  }
 }
 
 .ace_gutter-cell {
@@ -155,4 +144,24 @@ $gutter: #f6f6f6;
   width: 16px;
   height: 100%;
   right: 0;
+}
+
+#evalResult {
+  text-align: left;
+  border: 1px solid $border;
+  min-height: 50px;
+  max-height: 500px;
+  overflow: auto;
+  
+  .result {
+    margin: 5px 10px;
+  
+    &.error {
+      color: red;
+    }
+  }
+
+  .old {
+    opacity: 0.4;
+  }
 }

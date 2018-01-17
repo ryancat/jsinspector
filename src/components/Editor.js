@@ -30,7 +30,7 @@ class Editor extends Base {
     if (breakPoints[row]) {
       this.aceEditor.session.clearBreakpoint(row);
       return false;
-    } 
+    }
     else {
       this.aceEditor.session.setBreakpoint(row, className);
       return true;
@@ -53,7 +53,6 @@ class Editor extends Base {
 
     // Store changes into localStorage
     this.aceEditor.session.on('change', () => {
-      this.app.console.resultElement.innerHTML = '';
       localStorage.setItem('jsinspectorContent', this.aceEditor.getValue());
     });
   }

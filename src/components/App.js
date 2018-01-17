@@ -19,19 +19,22 @@ class App extends Base {
 
     // Config inspect behavior. 
     // This will trigger browser inspector.
-    // var inspectBtn = document.getElementById('inspectBtn');
+    // let inspectBtn = document.getElementById('inspectBtn');
     
     this.listen()
   }
 
   listen () {
     this.inspectBtn.addEventListener('click', () => {
-      var editor = this.editor.aceEditor,
+      let editor = this.editor.aceEditor,
           lineContents = editor.getValue().split('\n'),
-          evalContent,
-          result
+          result = '',
+          evalContent
+
       // TODO: Avoid nested eval
       // TODO: Undo and Redo
+
+      this.console.startNewLog()
 
       // Add breakpoints
       editor.session.getBreakpoints().forEach((breakPointClass, row) => {
@@ -42,16 +45,26 @@ class App extends Base {
 
       evalContent = '// Start debug your javascript...\ndebugger;\n\n' + lineContents.join('\n')
 
-      // It's ok to use eval as this will be a static page
-      try {
-        result = eval(evalContent)
-      } catch (e) {
-        this.console.resultElement.innerHTML = '<span class="result error">Your javascript code has error(s)</span>'
+      // hijack console.log
+      let oldConsoleLog = console.log
+      console.log = (...args) => {
+        this.console.addLog('> ' + args)
+        oldConsoleLog(args)
       }
 
-      if (this.console.resultElement.innerHTML === '') {
-        this.console.resultElement.innerHTML = '<span class="result">Result: ' + result + '</span>'
+      // It's ok to use eval as this will be a static page
+      try {
+        eval(evalContent)
+      } catch (e) {
+        this.console.resultElement.innerHTML = '<pre class="result error">Your javascript code has error(s)</pre>'
       }
+
+      // Restore console.log
+      console.log = oldConsoleLog
+
+      // if (this.console.resultElement.innerHTML === '') {
+      //   this.console.resultElement.innerHTML = '<pre class="result">' + result + '</pre>'
+      // }
     })
   }
 };
