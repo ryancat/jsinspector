@@ -1,6 +1,8 @@
 import Base from './Base'
 import ToolBox from './ToolBox'
 
+const defaultCode = 'function sum (a, b) {\n  return a + b;\n}\n\nsum(1,2);'
+
 class Editor extends Base {
   constructor (options = {}) {
     super()
@@ -43,6 +45,10 @@ class Editor extends Base {
       this.toggleBreakPoint(row) 
         ? this.toolBox.addToBreakpointLines(row) 
         : this.toolBox.removeFromBreakpointLines(row);
+
+      localStorage.setItem(
+        'jsinspectorBreakpoints', 
+        JSON.stringify(this.aceEditor.session.getBreakpoints()))
     });
 
     // Store changes into localStorage
@@ -54,9 +60,22 @@ class Editor extends Base {
 
   restoreCode () {
     // Retrieve Code from localStorage, if any
-    var content = localStorage.getItem('jsinspectorContent')
+    var content = localStorage.getItem('jsinspectorContent'),
+        breakpoints = JSON.parse(localStorage.getItem('jsinspectorBreakpoints') || '[]')
+
     if (content) {
       this.aceEditor.setValue(content)
+      breakpoints.forEach((breakpointClass, row) => {
+        if (breakpointClass) {
+          this.toggleBreakPoint(row)
+          this.toolBox.addToBreakpointLines(row)
+        }
+      })
+    }
+    else {
+      this.aceEditor.setValue(defaultCode)
+      this.toggleBreakPoint(1)
+      this.toolBox.addToBreakpointLines(1) 
     }
   }
 }
