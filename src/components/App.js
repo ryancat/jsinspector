@@ -102,7 +102,7 @@ class App extends Base {
         totalDuration += singleDuration
       }
 
-      this.console.addLog('[Average duration for ' + runCount + ' runs] ' + totalDuration / runCount * 1000 + ' ms')
+      this.console.addLog('[Average duration for ' + runCount + ' runs] ' + totalDuration / runCount + ' ms')
     })
   }
 };
