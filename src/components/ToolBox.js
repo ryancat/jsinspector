@@ -1,6 +1,14 @@
 import Base from './Base'
 import util from '../util'
 
+/**
+ * ToolBox component
+ * 
+ * This component will provide tools that are specific to an
+ * editor. The tools are 
+ * - Breakpoint toggle button
+ * - List of breakpoints
+ */
 class ToolBox extends Base {
   constructor (options = {}) {
     super()
@@ -14,7 +22,7 @@ class ToolBox extends Base {
 
   listen () {
     this.disableBreakpointElement.addEventListener('click', () => {
-      var editor = this.editor.aceEditor,
+      let editor = this.editor.aceEditor,
           breakPoints = editor.session.getBreakpoints()
 
       breakPoints.forEach((breakPointClass, row) => {
@@ -26,7 +34,7 @@ class ToolBox extends Base {
     })
 
     this.enableBreakpointElement.addEventListener('click', () => {
-      var editor = this.editor.aceEditor,
+      let editor = this.editor.aceEditor,
           breakPoints = editor.session.getBreakpoints();
 
       breakPoints.forEach((breakPointClass, row) => {
@@ -38,7 +46,7 @@ class ToolBox extends Base {
     })
 
     this.toolboxBreakpointLines.addEventListener('click', (e) => {
-      var clickedBreakpointLineElement = util.closestElement(e.target, 'breakpointLine'),
+      let clickedBreakpointLineElement = util.closestElement(e.target, 'breakpointLine'),
           clickedBreakpointLineCloseIconElement = util.closestElement(e.target, 'breakpointLineClose'),
           editor = this.editor.aceEditor,
           clickedRow
@@ -68,7 +76,7 @@ class ToolBox extends Base {
   }
 
   addToBreakpointLines (row) {
-    var lineContent = this.editor.aceEditor.session.getLine(row),
+    let lineContent = this.editor.aceEditor.session.getLine(row),
         breakpointLineElement = document.createElement('li')
 
     breakpointLineElement.classList.add('breakpointLine')
@@ -82,7 +90,7 @@ class ToolBox extends Base {
   }
 
   removeFromBreakpointLines (row) {
-    var lineElementToRemove = this.toolboxBreakpointLines.querySelector('.breakpointLine-' + row)
+    let lineElementToRemove = this.toolboxBreakpointLines.querySelector('.breakpointLine-' + row)
     this.toolboxBreakpointLines.removeChild(lineElementToRemove)
   }
 }

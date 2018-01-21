@@ -1,5 +1,6 @@
-$breakpoint: #d80000;
-$breakpointDisabled: #880000;
+$breakpoint: #ff7777;
+$breakpointDisabled: #ffdcdc;
+$breakpointHover: #ffa7a7;
 $border: #c3c3c3;
 $gutter: #f6f6f6;
 
@@ -44,19 +45,15 @@ button {
   position: relative;
   cursor: pointer;
 
-  &.ace_breakpoint {
-    &::before {
-      position: absolute;
-      left: -9px;
-      content: ' \25CF';
-      line-height: 15px;
-      font-size: 21px;
-      color: $breakpoint;
-      font-family: monospace;
-    }
+  &:hover {
+    background-color: $breakpointHover;
+  }
 
-    &.disabled::before {
-      color: $breakpointDisabled;
+  &.ace_breakpoint {
+    background-color: $breakpoint;
+
+    &.disabled {
+      background-color: $breakpointDisabled;
     }
   }
 }

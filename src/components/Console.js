@@ -6,12 +6,16 @@ class Console extends Base {
     this.resultElement = document.getElementById('evalResult');
   }
 
-  addLog (log) {
-    this.resultElement.innerHTML += '<pre class="result">' + log + '</pre>'
+  addLog (...log) {
+    this.resultElement.innerHTML += '<pre class="result">' + '> ' + log.join(' ') + '</pre>'
   }
 
-  addError (error) {
-    this.resultElement.innerHTML += '<pre class="result error">' + error + '</pre>'
+  addError (...error) {
+    this.resultElement.innerHTML += '<pre class="result error">' + '>>> ' + error.join(' ') + '</pre>'
+  }
+
+  addResult (...result) {
+    this.resultElement.innerHTML += '<pre class="result">' + '>>> ' + result.join(' ') + '</pre>'
   }
 
   clearLog () {

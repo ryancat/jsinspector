@@ -9,36 +9,72 @@ class App extends Base {
   constructor () {
     super()
     // this.editor = this.createEditor();
-    this.editor = new Editor({
+    this.editors = [new Editor({
       container: document.getElementById('editor'),
       app: this
-    })
+    })]
+
+    window.editors = this.editors
 
     this.console = new Console({
-      editor: this.editor
+      editors: this.editors
     })
 
     this.inspectBtn = document.getElementById('inspectBtn')
     this.perfBtn = document.getElementById('perfBtn')
 
-    // Config inspect behavior. 
-    // This will trigger browser inspector.
-    // let inspectBtn = document.getElementById('inspectBtn');
-    
     this.listen()
   }
 
   listen () {
-    this.inspectBtn.addEventListener('click', () => {
-      let editor = this.editor.aceEditor,
-          lineContents = editor.getValue().split('\n'),
-          evalContent
+    this.inspectBtn.addEventListener('click', this.handleInspectClick.bind(this))
 
-      // TODO: Avoid nested eval
-      // TODO: Undo and Redo
+    this.perfBtn.addEventListener('click', this.handlePerfClick.bind(this))
+
+    window.onbeforeunload = this.handlePageUnload.bind(this)
+  }
+
+  /**
+   * Handle exit logic
+   * 
+   * - store current code in each editor
+   */
+  handlePageUnload () {
+    this.editors.forEach((editor) => {
+      // Only store contents within 10MB limit (for most browser)
+      let content = editor.aceEditor.getValue()
+      if (content.length * 2 < 10 * 1000000) {
+        localStorage.setItem('jsinspectorContent-' + editor.filename, content);
+      }
+      else {
+        editor.addError('File size exceed auto save limit')
+      }
+
+      // Store breakpoint positions
+      localStorage.setItem(
+        'jsinspectorBreakpoints-' + editor.filename, 
+        JSON.stringify(editor.aceEditor.session.getBreakpoints()))
+    })
+  }
+
+  handleInspectClick () {
+    let editors = this.editors.map(editor => editor.aceEditor),
+        evalContent
+
+    // TODO: Avoid nested eval
+    // TODO: Undo and Redo
+
+    // hijack console.log
+    let oldConsoleLog = console.log
+    console.log = (...args) => {
+      this.console.addLog(args)
+      oldConsoleLog(args)
+    }
+
+    editors.forEach((editor) => {
+      let lineContents = editor.getValue().split('\n')
 
       this.console.startNewLog()
-
       // Add breakpoints
       editor.session.getBreakpoints().forEach((breakPointClass, row) => {
         if (breakPointClass.indexOf('disabled') === -1) {
@@ -47,48 +83,41 @@ class App extends Base {
       });
 
       evalContent = '// Start debug your javascript...\ndebugger;\n\n' + lineContents.join('\n')
-
-      // hijack console.log
-      let oldConsoleLog = console.log
-      console.log = (...args) => {
-        this.console.addLog('> ' + args)
-        oldConsoleLog(args)
-      }
-
       // It's ok to use eval as this will be a static page
       try {
-        this.console.addLog('>>> ' + eval(evalContent))
+        this.console.addResult(eval(evalContent))
       } catch (e) {
-        this.console.addError('>>> ' + e.message)
+        this.console.addError(e.message)
       }
-
-      // Restore console.log
-      console.log = oldConsoleLog
     })
 
-    this.perfBtn.addEventListener('click', () => {
-      let editor = this.editor.aceEditor,
-          content = editor.getValue(),
-          hasError = false,
-          totalDuration = 0,
-          singleDuration,
-          runCount,
-          runCountIter
-          
+    // Restore console.log
+    console.log = oldConsoleLog
+  }
+
+  handlePerfClick () {
+    let hasError = false,
+        totalDuration = 0,
+        singleDuration,
+        runCount,
+        runCountIter
+    
+    this.editors.forEach((editor) => {
+      let content = editor.aceEditor.getValue()
 
       this.console.startNewLog()
-
       // Perf test will evalute run time by average
       try {
         singleDuration = window.performance.now()
         eval(content)
         singleDuration = window.performance.now() - singleDuration
       } catch (e) {
-        this.console.addError('>>> ' + e.message)
+        this.console.addError(e.message)
         hasError = true
       }
 
       if (hasError) {
+        this.console.addError('[' + editor.filename + ']', 'Error evaluating javascript code')
         return
       }
 
@@ -102,7 +131,7 @@ class App extends Base {
         totalDuration += singleDuration
       }
 
-      this.console.addLog('[Average duration for ' + runCount + ' runs] ' + totalDuration / runCount + ' ms')
+      this.console.addResult('[' + editor.filename + ']', 'Average duration for ' + runCount + ' runs: ' + totalDuration / runCount + ' ms')
     })
   }
 };

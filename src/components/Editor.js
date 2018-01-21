@@ -2,18 +2,22 @@ import Base from './Base'
 import ToolBox from './ToolBox'
 
 const defaultCode = 'function sum (a, b) {\n  return a + b;\n}\n\nsum(1,2);'
+let _count = 0;
 
 class Editor extends Base {
   constructor (options = {}) {
     super()
+    _count++
+
     this.breakPointsDisabled = false
     this.app = options.app
+    this.filename = options.filename || 'File ' + _count
 
     // Config ace editor
     this.aceEditor = ace.edit(options.container);
     this.aceEditor.session.setMode("ace/mode/javascript");
     this.aceEditor.setTheme("ace/theme/tomorrow");
-
+    
     // Create ToolBox for this editor
     this.toolBox = new ToolBox({
       editor: this
@@ -24,57 +28,80 @@ class Editor extends Base {
   }
 
   toggleBreakPoint (row) {
-    var breakPoints = this.aceEditor.session.getBreakpoints(),
-        className = this.breakPointsDisabled ? 'ace_breakpoint disabled' : 'ace_breakpoint'
-  
-    if (breakPoints[row]) {
-      this.aceEditor.session.clearBreakpoint(row);
-      return false;
-    }
-    else {
-      this.aceEditor.session.setBreakpoint(row, className);
-      return true;
-    }
+    let breakPoints = this.aceEditor.session.getBreakpoints()
+    breakPoints[row] ? this.clearBreakpoint(row) : this.setBreakpoint(row)
   }
 
   listen () {
     // Add event listener for editor
-    this.aceEditor.on('gutterclick', (e) => {
-      var row = e.getDocumentPosition().row;
+    this.aceEditor.on('gutterclick', this.handleGutterclick.bind(this));
 
-      this.toggleBreakPoint(row) 
-        ? this.toolBox.addToBreakpointLines(row) 
-        : this.toolBox.removeFromBreakpointLines(row);
+    this.aceEditor.session.on('change', this.handleEditorChange.bind(this));
+  }
 
-      localStorage.setItem(
-        'jsinspectorBreakpoints', 
-        JSON.stringify(this.aceEditor.session.getBreakpoints()))
-    });
+  addLog (...arg) {
+    this.app.console.addLog('[' + this.filename + ']' + arg)
+  }
 
-    // Store changes into localStorage
-    this.aceEditor.session.on('change', () => {
-      localStorage.setItem('jsinspectorContent', this.aceEditor.getValue());
-    });
+  addError (...arg) {
+    this.app.console.addError('[' + this.filename + ']' + arg)
+  }
+
+  handleGutterclick (e) {
+    let row = e.getDocumentPosition().row
+
+    this.toggleBreakPoint(row) 
+  }
+
+  handleEditorChange (e) {
+    this.refreshBreakpoints()
+  }
+
+  /**
+   * Will remove unnecessary breakpoints
+   */
+  refreshBreakpoints () {
+    let aceEditor = this.aceEditor,
+        breakPoints = aceEditor.session.getBreakpoints(),
+        currentRows = aceEditor.session.getLength(),
+        toBeCleard = []
+
+    breakPoints.forEach((breakpointClass, row) => {
+      if (row >= currentRows) {
+        toBeCleard.push(row)
+      }
+    })
+
+    toBeCleard.forEach(row => this.clearBreakpoint(row))
+  }
+
+  clearBreakpoint (row) {
+    this.aceEditor.session.clearBreakpoint(row)
+    this.toolBox.removeFromBreakpointLines(row)
+  }
+
+  setBreakpoint (row) {
+    let className = this.breakPointsDisabled ? 'ace_breakpoint disabled' : 'ace_breakpoint'
+    this.aceEditor.session.setBreakpoint(row, className);
+    this.toolBox.addToBreakpointLines(row) 
   }
 
   restoreCode () {
     // Retrieve Code from localStorage, if any
-    var content = localStorage.getItem('jsinspectorContent'),
-        breakpoints = JSON.parse(localStorage.getItem('jsinspectorBreakpoints') || '[]')
+    let content = localStorage.getItem('jsinspectorContent-' + this.filename),
+        breakpoints = JSON.parse(localStorage.getItem('jsinspectorBreakpoints-' + this.filename) || '[]')
 
     if (content) {
       this.aceEditor.setValue(content)
       breakpoints.forEach((breakpointClass, row) => {
-        if (breakpointClass) {
-          this.toggleBreakPoint(row)
-          this.toolBox.addToBreakpointLines(row)
+        if (breakpointClass && row < this.aceEditor.session.getLength()) {
+          this.setBreakpoint(row)
         }
       })
     }
     else {
       this.aceEditor.setValue(defaultCode)
-      this.toggleBreakPoint(1)
-      this.toolBox.addToBreakpointLines(1) 
+      this.setBreakpoint(1)
     }
   }
 }

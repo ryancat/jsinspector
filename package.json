@@ -4,7 +4,7 @@
   "description": "Javascript inspector",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm test",
+    "start": "npm run build && npm run open",
     "open": "open index.html",
     "build": "webpack",
     "watch": "npm run build -- --watch"
