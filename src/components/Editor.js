@@ -40,11 +40,15 @@ class Editor extends Base {
   }
 
   addLog (...arg) {
-    this.app.console.addLog('[' + this.filename + ']' + arg)
+    this.app.console.addLog(this.filename, arg)
   }
 
   addError (...arg) {
-    this.app.console.addError('[' + this.filename + ']' + arg)
+    this.app.console.addError(this.filename, arg)
+  }
+
+  addResult (...arg) {
+    this.app.console.addResult(this.filename, arg)
   }
 
   handleGutterclick (e) {

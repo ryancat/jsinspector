@@ -5,15 +5,23 @@ $border: #c3c3c3;
 $gutter: #f6f6f6;
 
 button {
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none;
+
   &.primary {
-    width: 150px;
     position: relative;
     line-height: 30px;
     font-family: monospace;
     font-weight: bold;
     font-size: 14px;
-    cursor: pointer;
     margin-bottom: 20px;
+  }
+
+  &.secondary {
+    line-height: 15px;
+    font-family: monospace;
+    font-size: 12px;
   }
 }
 
@@ -70,25 +78,10 @@ button {
 }
 
 .toolbarBreakpointBtn {
-  position: relative;
-  height: 20px;
-  line-height: 15px;
-  font-family: monospace;
-  font-size: 12px;
-  padding-left: 17px;
-  box-sizing: border-box;
-  cursor: pointer;
+  background-color: $breakpoint;
 
-  &::before {
-    position: absolute;
-    left: 2px;
-    content: ' \25CF';
-    font-size: 21px;
-    color: $breakpoint;
-  }
-
-  &.toDisable::before {
-    color: $breakpointDisabled;
+  &.toDisable {
+    background-color: $breakpointDisabled;
   }
 
   &.toEnable {
@@ -143,23 +136,49 @@ button {
   right: 0;
 }
 
-#evalResult {
+#console {
   text-align: left;
   border: 1px solid $border;
-  min-height: 50px;
-  max-height: 500px;
-  overflow: auto;
   
-  .result {
-    margin: 5px 10px;
-  
-    &.error {
-      color: red;
+  .toolBar {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid $border;
+    margin-bottom: 10px;
+
+    .toClear {
+      margin: 5px;
+      flex-shrink: 0;
+    }
+
+    .editorTabs {
+      display: flex;
+      flex-grow: 1;
+      height: 30px;
+      border-left: 1px solid $border;
+      overflow: auto;
+    }
+
+    .editorTab {
+      border: none;
+      border-right: 1px solid $border;
     }
   }
 
-  .old {
-    opacity: 0.4;
+  .content {
+    min-height: 50px;
+
+    .result {
+      margin: 5px 10px;
+    
+      &.error {
+        color: red;
+      }
+    }
+  
+    .old {
+      opacity: 0.4;
+    }
   }
 }
 

@@ -17,7 +17,7 @@ class App extends Base {
     window.editors = this.editors
 
     this.console = new Console({
-      editors: this.editors
+      app: this
     })
 
     this.inspectBtn = document.getElementById('inspectBtn')
@@ -28,7 +28,6 @@ class App extends Base {
 
   listen () {
     this.inspectBtn.addEventListener('click', this.handleInspectClick.bind(this))
-
     this.perfBtn.addEventListener('click', this.handlePerfClick.bind(this))
 
     window.onbeforeunload = this.handlePageUnload.bind(this)
@@ -58,8 +57,7 @@ class App extends Base {
   }
 
   handleInspectClick () {
-    let editors = this.editors.map(editor => editor.aceEditor),
-        evalContent
+    let evalContent
 
     // TODO: Avoid nested eval
     // TODO: Undo and Redo
@@ -71,12 +69,12 @@ class App extends Base {
       oldConsoleLog(args)
     }
 
-    editors.forEach((editor) => {
-      let lineContents = editor.getValue().split('\n')
+    this.editors.forEach((editor) => {
+      let lineContents = editor.aceEditor.getValue().split('\n')
 
       this.console.startNewLog()
       // Add breakpoints
-      editor.session.getBreakpoints().forEach((breakPointClass, row) => {
+      editor.aceEditor.session.getBreakpoints().forEach((breakPointClass, row) => {
         if (breakPointClass.indexOf('disabled') === -1) {
           lineContents[row] = 'debugger; /* Line ' + (row + 1) + ' */' + lineContents[row]
         }
@@ -85,9 +83,9 @@ class App extends Base {
       evalContent = '// Start debug your javascript...\ndebugger;\n\n' + lineContents.join('\n')
       // It's ok to use eval as this will be a static page
       try {
-        this.console.addResult(eval(evalContent))
+        editor.addResult(eval(evalContent))
       } catch (e) {
-        this.console.addError(e.message)
+        editor.addError(e.message)
       }
     })
 
@@ -117,7 +115,7 @@ class App extends Base {
       }
 
       if (hasError) {
-        this.console.addError('[' + editor.filename + ']', 'Error evaluating javascript code')
+        this.console.addError(editor.filename, 'Error evaluating javascript code')
         return
       }
 
@@ -131,7 +129,7 @@ class App extends Base {
         totalDuration += singleDuration
       }
 
-      this.console.addResult('[' + editor.filename + ']', 'Average duration for ' + runCount + ' runs: ' + totalDuration / runCount + ' ms')
+      this.console.addResult(editor.filename, 'Average duration for ' + runCount + ' runs: ' + totalDuration / runCount + ' ms')
     })
   }
 };

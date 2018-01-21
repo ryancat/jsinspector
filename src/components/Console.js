@@ -1,29 +1,61 @@
 import Base from './Base'
 
 class Console extends Base {
-  constructor () {
+  constructor (options = {}) {
     super()
-    this.resultElement = document.getElementById('evalResult');
+
+    this.app = options.app
+    this.element = document.getElementById('console');
+    this.toolBarElement = this.element.querySelector('.toolBar')
+    this.clearBtnElement = this.toolBarElement.querySelector('button.toClear')
+    this.contentElement = this.element.querySelector('.content')
+
+    this.attachEditors()
+    this.listen()
   }
 
-  addLog (...log) {
-    this.resultElement.innerHTML += '<pre class="result">' + '> ' + log.join(' ') + '</pre>'
+  listen () {
+    this.clearBtnElement.addEventListener('click', this.handleClearConsole.bind(this))
   }
 
-  addError (...error) {
-    this.resultElement.innerHTML += '<pre class="result error">' + '>>> ' + error.join(' ') + '</pre>'
+  handleClearConsole () {
+    this.contentElement.innerHTML = ''
   }
 
-  addResult (...result) {
-    this.resultElement.innerHTML += '<pre class="result">' + '>>> ' + result.join(' ') + '</pre>'
+  attachEditors () {
+    let editors = this.app.editors,
+        editorTabs = document.createElement('div')
+
+    editorTabs.className = 'editorTabs tabs'
+    editors.forEach((editor) => {
+      let editorTab = document.createElement('button')
+      editorTab.className = 'editorTab tab'
+      editorTab.textContent = editor.filename
+
+      editorTabs.appendChild(editorTab)
+    })
+
+    this.toolBarElement.appendChild(editorTabs)
+  }
+
+  addLog (editorFilename, ...log) {
+    this.contentElement.innerHTML += '<pre class="result">' + editorFilename + ' > ' + log.join(' ') + '</pre>'
+  }
+
+  addError (editorFilename, ...error) {
+    this.contentElement.innerHTML += '<pre class="result error">' + editorFilename + ' >>> ' + error.join(' ') + '</pre>'
+  }
+
+  addResult (editorFilename, ...result) {
+    this.contentElement.innerHTML += '<pre class="result">' + editorFilename + ' >>> ' + result.join(' ') + '</pre>'
   }
 
   clearLog () {
-    this.resultElement.innerHTML = ''
+    this.contentElement.innerHTML = ''
   }
 
   startNewLog () {
-    let oldLogs = this.resultElement.querySelectorAll('pre.result'),
+    let oldLogs = this.contentElement.querySelectorAll('pre.result'),
         needSplitter = false
 
     oldLogs.forEach((node) => {
@@ -34,11 +66,11 @@ class Console extends Base {
     })
 
     if (needSplitter) {
-      this.resultElement.querySelectorAll('hr').forEach((node) => {
+      this.contentElement.querySelectorAll('hr').forEach((node) => {
         node.classList.add('old')
       })
 
-      this.resultElement.innerHTML += '<hr />'
+      this.contentElement.innerHTML += '<hr />'
     }
   }
 }
