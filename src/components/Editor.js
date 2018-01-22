@@ -2,6 +2,8 @@ import Base from './Base'
 import ToolBox from './ToolBox'
 
 const defaultCode = 'function sum (a, b) {\n  return a + b;\n}\n\nsum(1,2);'
+const ALL_EDITOR_ID = '-1'
+
 let _count = 0;
 
 class Editor extends Base {
@@ -12,11 +14,15 @@ class Editor extends Base {
     this.breakPointsDisabled = false
     this.app = options.app
     this.filename = options.filename || 'File ' + _count
+    this.id = _count.toString()
+    this.element = options.container
 
     // Config ace editor
-    this.aceEditor = ace.edit(options.container);
+    this.aceEditor = ace.edit(this.element);
     this.aceEditor.session.setMode("ace/mode/javascript");
     this.aceEditor.setTheme("ace/theme/tomorrow");
+    this.aceEditor.$blockScrolling = Infinity
+    this.listen()
     
     // Create ToolBox for this editor
     this.toolBox = new ToolBox({
@@ -24,7 +30,13 @@ class Editor extends Base {
     })
 
     this.restoreCode()
-    this.listen()
+    
+    // Attach editors
+    this.fire('editor.init', this)
+  }
+
+  static get ALL_EDITOR_ID () {
+    return ALL_EDITOR_ID
   }
 
   toggleBreakPoint (row) {
@@ -35,20 +47,19 @@ class Editor extends Base {
   listen () {
     // Add event listener for editor
     this.aceEditor.on('gutterclick', this.handleGutterclick.bind(this));
-
     this.aceEditor.session.on('change', this.handleEditorChange.bind(this));
   }
 
   addLog (...arg) {
-    this.app.console.addLog(this.filename, arg)
+    this.app.console.addLog(this, arg)
   }
 
   addError (...arg) {
-    this.app.console.addError(this.filename, arg)
+    this.app.console.addError(this, arg)
   }
 
   addResult (...arg) {
-    this.app.console.addResult(this.filename, arg)
+    this.app.console.addResult(this, arg)
   }
 
   handleGutterclick (e) {
@@ -107,6 +118,14 @@ class Editor extends Base {
       this.aceEditor.setValue(defaultCode)
       this.setBreakpoint(1)
     }
+  }
+
+  show () {
+    this.element.style.display = 'block'
+  }
+
+  hide () {
+    this.element.style.display = 'none'
   }
 }
 

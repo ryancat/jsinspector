@@ -3,6 +3,7 @@ $breakpointDisabled: #ffdcdc;
 $breakpointHover: #ffa7a7;
 $border: #c3c3c3;
 $gutter: #f6f6f6;
+$selected: #efefef;
 
 button {
   box-sizing: border-box;
@@ -25,11 +26,31 @@ button {
   }
 }
 
+.editorTabs {
+  display: flex;
+  flex-grow: 1;
+  height: 30px;
+  overflow: auto;
+
+  .editorTab {
+    border-right: none;
+    border-bottom: none;
+
+    &:last-child {
+      border-right: 1px solid $border;
+    }
+
+    &.selected {
+      background-color: $selected;
+    }
+  }
+}
+
 #jsinspectorApp {
   margin: 20px;
 }
 
-#editor {
+.editor {
   width: 100%;
   min-width: 300px;
   height: 500px;
@@ -151,17 +172,8 @@ button {
       flex-shrink: 0;
     }
 
-    .editorTabs {
-      display: flex;
-      flex-grow: 1;
-      height: 30px;
-      border-left: 1px solid $border;
-      overflow: auto;
-    }
-
     .editorTab {
-      border: none;
-      border-right: 1px solid $border;
+      border-top: none;
     }
   }
 

@@ -1,6 +1,6 @@
 const util = {
-  closestElement: (startElement, className) => {
-    while (startElement) {
+  closestElement: (startElement, className, endElement = document.body) => {
+    while (startElement !== endElement.parentElement) {
       if (startElement.classList.contains(className)) {
         return startElement
       }

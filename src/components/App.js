@@ -1,6 +1,9 @@
 import Base from './Base'
 import Editor from './Editor'
 import Console from './Console'
+import Tabs from './Tabs'
+import util from '../util'
+import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 // Performance test duration is about 3s
 const PERF_DURATION = 3000
@@ -8,29 +11,36 @@ const PERF_DURATION = 3000
 class App extends Base {
   constructor () {
     super()
-    // this.editor = this.createEditor();
-    this.editors = [new Editor({
-      container: document.getElementById('editor'),
-      app: this
-    })]
 
-    window.editors = this.editors
+    this.inspectBtn = document.getElementById('inspectBtn')
+    this.perfBtn = document.getElementById('perfBtn')
+    this.newEditorBtn = document.getElementById('newEditorBtn')
+    this.editorsElement = document.getElementById('editors')
+    // this.editorTabs = this.editorsElement.querySelector('.editorTabs')
+    this.listen()
 
     this.console = new Console({
       app: this
     })
 
-    this.inspectBtn = document.getElementById('inspectBtn')
-    this.perfBtn = document.getElementById('perfBtn')
+    this.editorTabs = new Tabs({
+      app: this,
+      container: this.editorsElement.querySelector('.editorTabs')
+    })
 
-    this.listen()
+    this.editors = []
+    this.addNewEditor()
+    // window.editors = this.editors
   }
 
   listen () {
     this.inspectBtn.addEventListener('click', this.handleInspectClick.bind(this))
     this.perfBtn.addEventListener('click', this.handlePerfClick.bind(this))
-
+    this.newEditorBtn.addEventListener('click', this.handleNewEditorClick.bind(this))
     window.onbeforeunload = this.handlePageUnload.bind(this)
+
+    this.on('editor.init', this.attachTabToEditor.bind(this))
+    this.on('tabs.selectId', this.selectTabWithId.bind(this))
   }
 
   /**
@@ -62,17 +72,17 @@ class App extends Base {
     // TODO: Avoid nested eval
     // TODO: Undo and Redo
 
-    // hijack console.log
     let oldConsoleLog = console.log
-    console.log = (...args) => {
-      this.console.addLog(args)
-      oldConsoleLog(args)
-    }
-
+    this.console.startNewLog()
     this.editors.forEach((editor) => {
       let lineContents = editor.aceEditor.getValue().split('\n')
 
-      this.console.startNewLog()
+      // hijack console.log
+      console.log = (...args) => {
+        this.console.addLog(editor, ...args)
+        oldConsoleLog(args)
+      }
+
       // Add breakpoints
       editor.aceEditor.session.getBreakpoints().forEach((breakPointClass, row) => {
         if (breakPointClass.indexOf('disabled') === -1) {
@@ -100,22 +110,22 @@ class App extends Base {
         runCount,
         runCountIter
     
+    this.console.startNewLog()
+
     this.editors.forEach((editor) => {
       let content = editor.aceEditor.getValue()
-
-      this.console.startNewLog()
       // Perf test will evalute run time by average
       try {
         singleDuration = window.performance.now()
         eval(content)
         singleDuration = window.performance.now() - singleDuration
       } catch (e) {
-        this.console.addError(e.message)
+        this.console.addError(editor, e.message)
         hasError = true
       }
 
       if (hasError) {
-        this.console.addError(editor.filename, 'Error evaluating javascript code')
+        this.console.addError(editor, 'Error evaluating javascript code')
         return
       }
 
@@ -129,8 +139,62 @@ class App extends Base {
         totalDuration += singleDuration
       }
 
-      this.console.addResult(editor.filename, 'Average duration for ' + runCount + ' runs: ' + totalDuration / runCount + ' ms')
+      this.console.addResult(editor, 'Average duration for ' + runCount + ' runs: ' + totalDuration / runCount + ' ms')
     })
+  }
+
+  /**
+   * When click on new editor button, we will spawn a new editor
+   */
+  handleNewEditorClick () {
+    this.addNewEditor()
+  }
+
+  addNewEditor () {
+    let editorElement = document.createElement('div')
+    editorElement.classList.add('editor')
+    this.editorsElement.appendChild(editorElement)
+
+    let newEditor = new Editor({
+      container: editorElement,
+      app: this
+    })
+
+    this.editors.push(newEditor)
+    this.showEditor(newEditor)
+  }
+
+  attachTabToEditor (editor) {
+    this.editorTabs.addTab(editor.id, editor.filename)
+    // Always select the attached tab
+    this.editorTabs.selectTabWithId(editor.id)
+  }
+
+  showEditor (editor) {
+    this.editors.forEach((editor) => editor.hide())
+    editor.show()
+  }
+
+  showEditorWithId (id) {
+    if (typeof id === 'undefined' || id === null) {
+      return
+    }
+
+    let editor = this.editors.find((editor) => editor.id === id)
+
+    if (!editor) {
+      this.console.addError(null, 'No such file to show')
+      return
+    }
+
+    this.showEditor(editor)
+  }
+
+  selectTabWithId (id, tabs) {
+    if (this.editorTabs !== tabs) {
+      return
+    }
+    this.showEditorWithId(id)
   }
 };
 
