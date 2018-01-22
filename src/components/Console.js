@@ -1,6 +1,7 @@
 import Base from './Base'
 import Tabs from './Tabs'
-import Editor from './Editor'
+
+const ALL_EDITOR_ID = '-1'
 
 class Console extends Base {
   constructor (options = {}) {
@@ -43,23 +44,23 @@ class Console extends Base {
     if (!this.editorTabs.tabCount) {
       // First time adding tab to editor, we are going to
       // also add a tab for 'All'
-      this.editorTabs.addTab(Editor.ALL_EDITOR_ID, 'All files')
-      this.editorTabs.selectTabWithId(Editor.ALL_EDITOR_ID)
+      this.editorTabs.addTab(ALL_EDITOR_ID, 'All files')
+      this.editorTabs.selectTabWithId(ALL_EDITOR_ID)
     }
 
     this.editorTabs.addTab(editor.id, editor.filename)
   }
 
   renderLogs () {
-    let logs = this.logs
+    let logs = this.logs.slice()
 
     // Apply log filters
     this.filters.forEach((filter) => {
       switch (filter.op) {
         case 'editor':
           logs = logs.filter(log => 
-            filter.value === Editor.ALL_EDITOR_ID // Filter for all editors
-            || log.editorId === Editor.ALL_EDITOR_ID // Logs for all editors
+            filter.value === ALL_EDITOR_ID // Filter for all editors
+            || log.editorId === ALL_EDITOR_ID // Logs for all editors
             || log.editorId === filter.value)
           break
         
@@ -69,13 +70,26 @@ class Console extends Base {
       }
     })
 
+    // Apply out of date marks
+    logs.unshift({
+      content: '<div class="outOfDateLog">'
+    })
+    let i = 1;
+    while (logs[i] && logs[i].isOutOfDate && i++) {}
+
+    if (logs[i]) {
+      logs.splice(i, 0, {
+        content: '</div>'
+      })
+    }
+
     this.contentElement.innerHTML = logs.map(log => log.content).join('')
   }
 
   addLog (editor, ...log) {
     this.logs.push({
       editorId: editor ? editor.id : -1,
-      content: '<pre class="result">' + editor.filename + ' > ' + log.join(' ') + '</pre>'
+      content: '<pre class="result">' + (editor ? editor.filename : 'N/A') + ' > ' + log.join(' ') + '</pre>'
     })
     this.renderLogs()
   }
@@ -83,7 +97,7 @@ class Console extends Base {
   addError (editor, ...error) {
     this.logs.push({
       editorId: editor ? editor.id : -1,
-      content: '<pre class="result error">' + editor.filename + ' >>> ' + error.join(' ') + '</pre>'
+      content: '<pre class="result error">' + (editor ? editor.filename : 'N/A') + ' >>> ' + error.join(' ') + '</pre>'
     })
     this.renderLogs()
   }
@@ -91,7 +105,7 @@ class Console extends Base {
   addResult (editor, ...result) {
     this.logs.push({
       editorId: editor ? editor.id : -1,
-      content: '<pre class="result">' + editor.filename + ' >>> ' + result.join(' ') + '</pre>'
+      content: '<pre class="result">' + (editor ? editor.filename : 'N/A') + ' >>> ' + result.join(' ') + '</pre>'
     })
     this.renderLogs()
   }
@@ -102,19 +116,21 @@ class Console extends Base {
   }
 
   startNewLog () {
-    let lastLog = this.logs[this.logs.length - 1]
-
-    // if (typeof lastLog === 'undefined' || lastLog.content !== '<hr />') {
-      
-    // }
+    if (!this.logs.length) {
+      return
+      // The first log ever, no need to render divider
+    }
 
     // Make the existing logs old
+    this.logs.forEach(log => log.isOutOfDate = true)
+
+    // Add new log divider
     this.logs.push({
       // -1 editor id will show for all editor
-      editorId: Editor.ALL_EDITOR_ID,
+      editorId: ALL_EDITOR_ID,
       content: '<hr />'
     })
-    this.renderLogs()
+    // this.renderLogs()
 
     // let oldLogs = this.contentElement.querySelectorAll('pre.result'),
     //     needSplitter = false

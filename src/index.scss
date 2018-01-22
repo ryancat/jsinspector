@@ -3,7 +3,13 @@ $breakpointDisabled: #ffdcdc;
 $breakpointHover: #ffa7a7;
 $border: #c3c3c3;
 $gutter: #f6f6f6;
-$selected: #efefef;
+$selected: #dcdcdc;
+$heavy: #c7c7c7;
+$light: #f5f5f5;
+
+$fontBig: 16px;
+$fontPrimary: 14px;
+$fontSecondary: 12px;
 
 button {
   box-sizing: border-box;
@@ -15,33 +21,48 @@ button {
     line-height: 30px;
     font-family: monospace;
     font-weight: bold;
-    font-size: 14px;
+    font-size: $fontPrimary;
     margin-bottom: 20px;
   }
 
   &.secondary {
     line-height: 15px;
     font-family: monospace;
-    font-size: 12px;
+    font-size: $fontSecondary;
   }
 }
 
 .editorTabs {
   display: flex;
   flex-grow: 1;
-  height: 30px;
   overflow: auto;
 
-  .editorTab {
-    border-right: none;
+  .tab {
+    border: 1px solid $border;
+    border-left: none;
     border-bottom: none;
+    height: 30px;
+    font-family: monospace;
+
+    &:first-child {
+      border-left: 1px solid $border;
+    }
 
     &:last-child {
       border-right: 1px solid $border;
     }
 
+    &:active {
+      background-color: $heavy;
+    }
+
     &.selected {
       background-color: $selected;
+    }
+
+    &.toCreateTab {
+      background-color: $light;
+      font-size: $fontBig;
     }
   }
 }
@@ -67,7 +88,7 @@ button {
   text-align: center;
   margin-bottom: 10px;
   font-family: monospace;
-  font-size: 12px;
+  font-size: $fontSecondary;
 }
 
 .ace_gutter-cell {
@@ -124,14 +145,6 @@ button {
   border: 1px solid $breakpoint;
   margin-bottom: 5px;
   cursor: pointer;
-
-  &:hover {
-    .breakpointLineClose::before {
-      content: '\d7';
-      font-size: 21px;
-      line-height: 21px;
-    }
-  }
 }
 
 .breakpointLineNumber {
@@ -172,7 +185,7 @@ button {
       flex-shrink: 0;
     }
 
-    .editorTab {
+    .tab {
       border-top: none;
     }
   }
@@ -188,7 +201,7 @@ button {
       }
     }
   
-    .old {
+    .outOfDateLog {
       opacity: 0.4;
     }
   }

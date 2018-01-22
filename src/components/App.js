@@ -7,6 +7,7 @@ import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 // Performance test duration is about 3s
 const PERF_DURATION = 3000
+const ADD_NEW_FILE_ID = '-2'
 
 class App extends Base {
   constructor () {
@@ -14,9 +15,7 @@ class App extends Base {
 
     this.inspectBtn = document.getElementById('inspectBtn')
     this.perfBtn = document.getElementById('perfBtn')
-    this.newEditorBtn = document.getElementById('newEditorBtn')
     this.editorsElement = document.getElementById('editors')
-    // this.editorTabs = this.editorsElement.querySelector('.editorTabs')
     this.listen()
 
     this.console = new Console({
@@ -25,22 +24,24 @@ class App extends Base {
 
     this.editorTabs = new Tabs({
       app: this,
-      container: this.editorsElement.querySelector('.editorTabs')
+      container: this.editorsElement.querySelector('.editorTabs'),
+      createTab: {
+        label: '+'
+      }
     })
 
     this.editors = []
     this.addNewEditor()
-    // window.editors = this.editors
   }
 
   listen () {
     this.inspectBtn.addEventListener('click', this.handleInspectClick.bind(this))
     this.perfBtn.addEventListener('click', this.handlePerfClick.bind(this))
-    this.newEditorBtn.addEventListener('click', this.handleNewEditorClick.bind(this))
     window.onbeforeunload = this.handlePageUnload.bind(this)
 
     this.on('editor.init', this.attachTabToEditor.bind(this))
     this.on('tabs.selectId', this.selectTabWithId.bind(this))
+    this.on('tabs.createTab', this.addNewEditor.bind(this))
   }
 
   /**
@@ -143,13 +144,6 @@ class App extends Base {
     })
   }
 
-  /**
-   * When click on new editor button, we will spawn a new editor
-   */
-  handleNewEditorClick () {
-    this.addNewEditor()
-  }
-
   addNewEditor () {
     let editorElement = document.createElement('div')
     editorElement.classList.add('editor')
@@ -194,6 +188,7 @@ class App extends Base {
     if (this.editorTabs !== tabs) {
       return
     }
+
     this.showEditorWithId(id)
   }
 };

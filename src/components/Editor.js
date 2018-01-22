@@ -2,7 +2,6 @@ import Base from './Base'
 import ToolBox from './ToolBox'
 
 const defaultCode = 'function sum (a, b) {\n  return a + b;\n}\n\nsum(1,2);'
-const ALL_EDITOR_ID = '-1'
 
 let _count = 0;
 
@@ -33,10 +32,6 @@ class Editor extends Base {
     
     // Attach editors
     this.fire('editor.init', this)
-  }
-
-  static get ALL_EDITOR_ID () {
-    return ALL_EDITOR_ID
   }
 
   toggleBreakPoint (row) {
